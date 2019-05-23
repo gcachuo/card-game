@@ -5,7 +5,8 @@ namespace Model;
 class Cards
 {
     /** @var TableColumn $id
-      * @var TableColumn $name */
+     * @var TableColumn $name
+     */
     private $id;
     private $name;
 
@@ -17,7 +18,16 @@ class Cards
         ];
 
         $mysql = new MySQL();
-        $mysql->create_table('cards', $columns);
+        if ($mysql->create_table('cards', $columns)) {
+            $this->insert(1, 5);
+            $this->insert(2, 2);
+            $this->insert(3, 2);
+            $this->insert(4, 2);
+            $this->insert(5, 2);
+            $this->insert(6, 1);
+            $this->insert(7, 1);
+            $this->insert(8, 1);
+        }
 
         $columns = [
             new TableColumn('cards_id', ColumnTypes::BIGINT, 0, true),
@@ -29,5 +39,11 @@ class Cards
 create unique index cards_locale_cards_id_uindex on cards_locale (cards_id);
 sql;
         $mysql->create_table('cards_locale', $columns, $sql);
+    }
+
+    function insert($id, $quantity)
+    {
+        $mysql = new MySQL();
+        $mysql->prepare("insert into cards(id, quantity) VALUES (?, ?);", ['ii', $id, $quantity]);
     }
 }

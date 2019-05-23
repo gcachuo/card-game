@@ -2,6 +2,7 @@
 
 namespace Model;
 
+use mysql_xdevapi\Exception;
 use mysqli;
 
 class MySQL
@@ -28,40 +29,61 @@ class MySQL
         }
     }
 
-    function query($sql)
+    function query($sql, $multi = false)
     {
-        try {
-            if (!empty($sql)) {
+        if (!empty($sql)) {
+            if ($multi) {
                 $this->mysqli->multi_query($sql);
+            } else {
+                return $this->mysqli->query($sql);
             }
-        } catch (\mysqli_sql_exception $exception) {
-            die(json_encode(["error" => $exception->getMessage(), "query" => $sql]));
         }
+    }
+
+    function prepare($sql, $params)
+    {
+        $stmt = $this->mysqli->prepare($sql);
+        foreach ($params as $k => &$param) {
+            $array[] =& $param;
+        }
+        call_user_func_array(array($stmt, 'bind_param'), $params);
+        $stmt->execute();
+        $stmt->close();
     }
 
     /**
      * @param string $table
      * @param TableColumn[] $columns
      * @param string $extra_sql
+     * @return bool
      */
     function create_table($table, $columns, $extra_sql = '')
     {
-        $sql_columns = "";
-        foreach ($columns as $column) {
-            $sql_columns .=
-                $column->name . " " .
-                $column->type . ($column->type_size ? "($column->type_size)" : '') . " " .
-                ($column->default ? "default " . (ctype_digit($column->default) ? $column->default : "'$column->default'") : '') . " " .
-                ($column->auto_increment ? 'auto_increment' : '') . " " .
-                ($column->primary_key ? 'primary key' : '') . " " .
-                ($column->not_null ? 'not null' : '') . ',';
-        }
-        $sql_columns = trim($sql_columns, ',');
+        try {
+            $val = $this->query("select 1 from `$table` LIMIT 1");
+        } catch (\mysqli_sql_exception $exception) {
+            if ($exception->getCode() == 1146) {
+                $sql_columns = "";
+                foreach ($columns as $column) {
+                    $sql_columns .=
+                        $column->name . " " .
+                        $column->type . ($column->type_size ? "($column->type_size)" : '') . " " .
+                        ($column->default ? "default " . (ctype_digit($column->default) ? $column->default : "'$column->default'") : '') . " " .
+                        ($column->auto_increment ? 'auto_increment' : '') . " " .
+                        ($column->primary_key ? 'primary key' : '') . " " .
+                        ($column->not_null ? 'not null' : '') . ',';
+                }
+                $sql_columns = trim($sql_columns, ',');
 
-        $sql = <<<sql
+                $sql = <<<sql
 CREATE TABLE IF NOT EXISTS `$table`($sql_columns);
 sql;
-        $this->query($sql.$extra_sql);
+                $this->query($sql . $extra_sql, true);
+                return true;
+            } else {
+                throw $exception;
+            }
+        }
     }
 }
 
