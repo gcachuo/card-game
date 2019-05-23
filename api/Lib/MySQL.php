@@ -15,7 +15,7 @@ class MySQL
     public function __construct()
     {
         mysqli_report(MYSQLI_REPORT_ALL);
-        $filename = __DIR__ . '/../config/database.json';
+        $filename = __DIR__ . '/../Config/database.json';
         if (file_exists($filename)) {
             $contents = file_get_contents($filename);
             $config = json_decode($contents, true);
@@ -26,6 +26,8 @@ class MySQL
             $dbname = $config['dbname'];
 
             $this->mysqli = new mysqli($host, $username, $passwd, $dbname);
+        } else {
+            die(json_encode(["error" => "File 'database.json' not found."]));
         }
     }
 
@@ -60,7 +62,7 @@ class MySQL
     function create_table($table, $columns, $extra_sql = '')
     {
         try {
-            $val = $this->query("select 1 from `$table` LIMIT 1");
+            $this->query("select 1 from `$table` LIMIT 1");
         } catch (\mysqli_sql_exception $exception) {
             if ($exception->getCode() == 1146) {
                 $sql_columns = "";
@@ -84,6 +86,7 @@ sql;
                 throw $exception;
             }
         }
+        return false;
     }
 }
 

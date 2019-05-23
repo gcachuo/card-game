@@ -4,11 +4,27 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 spl_autoload_register(function ($class) {
     $split = explode('\\', $class);
-    include "$split[0]/{$split[1]}.php";
+    $dir = $split[0];
+    $file = ucfirst(isset_get($split[1]));
+    $path = "$dir/$file.php";
+    if (file_exists($path)) {
+        include $path;
+    }
 });
 
-include "lib/MySQL.php";
+include "Lib/System.php";
+include "Lib/MySQL.php";
 
-use Model\Cards;
+$request = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
 
-new Cards();
+$controller = strtolower($request[0]);
+$action = isset_get($request[1]);
+
+$namespace = "Controller\\$controller";
+$class = new $namespace();
+$response = null;
+if (method_exists($class, $action)) {
+    $response = $class->$action();
+    die(json_encode(compact('response')));
+}
+die(json_encode(compact('response')));

@@ -36,7 +36,11 @@ class Cards
             new TableColumn('description', ColumnTypes::VARCHAR, 255),
         ];
         $sql = <<<sql
-create unique index cards_locale_cards_id_uindex on cards_locale (cards_id);
+create unique index cards_locale_pk on cards_locale (cards_id, language);
+alter table cards_locale
+	add constraint cards_locale_cards_id_fk
+		foreign key (cards_id) references cards (id)
+			on update cascade on delete set null;
 sql;
         $mysql->create_table('cards_locale', $columns, $sql);
     }
