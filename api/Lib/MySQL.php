@@ -27,7 +27,7 @@ class MySQL
 
             $this->mysqli = new mysqli($host, $username, $passwd, $dbname);
         } else {
-            die(json_encode(["error" => "File 'database.json' not found."]));
+            set_error("File 'database.json' not found.");
         }
     }
 

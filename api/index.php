@@ -25,6 +25,6 @@ $class = new $namespace();
 $response = null;
 if (method_exists($class, $action)) {
     $response = $class->$action();
-    die(json_encode(compact('response')));
+    set_response($response);
 }
-die(json_encode(compact('response')));
+set_response($response);
