@@ -1,5 +1,6 @@
 <?php
 setcookie('XDEBUG_SESSION', 'PHPSTORM');
+header('Content-Type: application/json');
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 spl_autoload_register(function ($class) {
