@@ -11,13 +11,15 @@ class Game
         $id = isset_get($_POST['id']);
         if ($id) {
             $this->path = __DIR__ . "/../Data/";
-            $this->saveGame($id);
+            if (file_exists($this->path . $id . ".json")) {
+                $this->loadGame($id);
+            }
         } else {
             set_error('Game not found.');
         }
     }
 
-    function saveGame($file, $data = null)
+    private function saveGame($file, $data = null)
     {
         $data = $data ?: $this->data;
         if ($this->path) {
@@ -25,10 +27,24 @@ class Game
         }
     }
 
-    function startGame()
+    private function loadGame($file)
     {
-        $this->saveGame(1);
+        if ($this->path) {
+            $this->data = json_decode(file_get_contents($this->path . "$file.json"), true)['data'];
+        }
+    }
+
+    function start()
+    {
+        $data = ['name' => ''];
+        $this->saveGame(isset_get($_POST['id']), $data);
         return true;
+    }
+
+    function status()
+    {
+        $data = $this->data;
+        return compact('data');
     }
 
     function drawCard()
