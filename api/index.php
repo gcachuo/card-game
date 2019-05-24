@@ -20,12 +20,15 @@ $request = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
 
 $controller = strtolower($request[0]);
 $action = isset_get($request[1]);
+$response = null;
 
 $namespace = "Controller\\$controller";
-$class = new $namespace();
-$response = null;
-if (method_exists($class, $action)) {
-    $response = $class->$action();
-    set_response($response);
+if (class_exists($namespace)) {
+    $class = new $namespace();
+    if (method_exists($class, $action)) {
+        $response = $class->$action();
+        set_response($response);
+    }
 }
+
 set_response($response);
